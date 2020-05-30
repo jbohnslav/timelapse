@@ -5,6 +5,12 @@ from datetime import datetime
 import os
 import traceback
 
+settings = [(cv2.CAP_PROP_BRIGHTNESS, 100),
+            (cv2.CAP_PROP_CONTRAST, 135)]
+
+properties = {'brightness': cv2.CAP_PROP_BRIGHTNESS,
+              'contrast': cv2.CAP_PROP_CONTRAST}
+
 def set_res(cap, width:int, height: int):
     # https://docs.opencv.org/3.4/d4/d15/group__videoio__flags__base.html#gaeb8dd9c89c10a5c63c139bf7c4f5704d
     try:
@@ -35,9 +41,18 @@ def acquisition_loop(args):
     first_frame = True
     last_frame_acq = time.perf_counter()
     frame_num = 0
+    
+    print('initial camera settings')
+    for prop, value in properties.items():
+        print('{}: {}'.format(prop, cam.get(value)))
+        
+        
+    
+    for setting in settings:
+        cam.set(setting[0], setting[1])
 
     if args.preview:
-        cv2.namedWindow('preview')
+        cv2.namedWindow('preview', cv2.WINDOW_NORMAL)
         font = cv2.FONT_HERSHEY_SIMPLEX
     if args.save:
         starttime = datetime.now().strftime('%y%m%d_%H%M%S')
@@ -47,6 +62,12 @@ def acquisition_loop(args):
     try:
 
         set_max_res(cam)
+        
+        # it takes a few frames to set brightness, etc
+        for i in range(100):
+            ret, frame = cam.read()
+            # don't do anything with this
+        
         while True:
             if time.perf_counter() - last_frame_acq > 1 / args.fps:
                 ret, frame = cam.read()
@@ -64,7 +85,7 @@ def acquisition_loop(args):
                     height = frame.shape[0]
                     cv2.putText(frame, frame_string, (10, height - 20), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
                     cv2.imshow('preview', frame)
-                    key = cv2.waitKey(int(1 / args.fps * 1000) - 2)
+                    key = cv2.waitKey(1)
                     if key == 27 or key == 113:
                         # escape or q
                         raise KeyboardInterrupt
