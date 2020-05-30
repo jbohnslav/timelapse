@@ -3,6 +3,7 @@ import argparse
 import time
 from datetime import datetime
 import os
+import traceback
 
 def set_res(cap, width:int, height: int):
     # https://docs.opencv.org/3.4/d4/d15/group__videoio__flags__base.html#gaeb8dd9c89c10a5c63c139bf7c4f5704d
@@ -22,8 +23,8 @@ def set_res(cap, width:int, height: int):
         print('Resolution not supported. w: {}, h: {}'.format(width, height))
 
 def set_max_res(cap):
-    widths = [320, 640, 800, 1280, 1440, 1920]
-    heights = [240, 360, 600, 720, 900, 1080]
+    widths = [320, 640, 640, 800, 1280, 1440, 1920]
+    heights = [240, 360, 480, 600, 720, 900, 1080]
     for width, height in zip(widths, heights):
         set_res(cap, width, height)
 
@@ -77,7 +78,9 @@ def acquisition_loop(args):
                 break
 
     except Exception as e:
-        print('Exception: {}'.format(e))
+        print(traceback.format_exc())
+        print('Error: {}'.format(e))
+        
     finally:
         cv2.destroyAllWindows()
         cam.release()
@@ -85,7 +88,7 @@ def acquisition_loop(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Acquire time lapse images from USB webcam.')
-    parser.add_argument('-d', '--duration', type=int,
+    parser.add_argument('-d', '--duration', type=int, required=True,
                         help='duration of acquisition in minutes')
     parser.add_argument('--opencv_id', type=int, default=0,
                         help='which integer value the webcam is')
